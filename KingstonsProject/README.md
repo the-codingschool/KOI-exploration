@@ -11,3 +11,6 @@ RESEARCH QUESTIONS:
   + What trends can be found within the data that might help us identify planets or false positives?
 * What are possible reasons that a KOI might end up being a false positive?
 * How can the knowledge of habitable planets help us?
+* How does the equilibrium temperature affect the KOI's disposition?
+* How does the transit duration (or other variables) of CANDIDATE KOIs differ compared to CANDIDATE KOIs with different disposition scores?
+* What does the equilibrium temperature, transit duration, transit depth, orbital period, and stellar radius tell us about the radius of the planet
