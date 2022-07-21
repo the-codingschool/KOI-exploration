@@ -36,7 +36,17 @@ vignettes/*.pdf
 *.knit.md
 
 # R Environment Variables
+<<<<<<< HEAD
+.Renviron
+<<<<<<< HEAD
+
+# R project file
+*.Rproj
+=======
+=======
 .Renviron
 
 # R project file
 *.Rproj
+>>>>>>> 472e7c4b2903c3a44fc051b0eea46c94e4007ccc
+>>>>>>> fd3291919b1d8327baf366cdf7675c4cbc82d1fa
