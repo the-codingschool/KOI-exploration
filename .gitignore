@@ -1,3 +1,11 @@
+
+#R project Variables 
+*.Rproj
+
+#DS Store
+.DS_Store
+
+
 # History files
 .Rhistory
 .Rapp.history
