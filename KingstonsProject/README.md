@@ -13,4 +13,5 @@ RESEARCH QUESTIONS:
 * How can the knowledge of habitable planets help us?
 * How does the equilibrium temperature affect the KOI's disposition?
 * How does the transit duration (or other variables) of CANDIDATE KOIs differ compared to CANDIDATE KOIs with different disposition scores?
-* What does the equilibrium temperature, transit duration, transit depth, orbital period, and stellar radius tell us about the radius of the planet
+* What does the equilibrium temperature, transit duration, transit depth, orbital period, and stellar radius tell us about the radius of the planet?
+* How does the planetary radius and stellar surface gravity affect the orbital period or transit duration?
