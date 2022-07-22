@@ -5,7 +5,6 @@
 #DS Store
 .DS_Store
 
-
 # History files
 .Rhistory
 .Rapp.history
@@ -44,11 +43,5 @@ vignettes/*.pdf
 *.knit.md
 
 # R Environment Variables
-<<<<<<< HEAD
-.Renviron
-=======
 .Renviron
 
-# R project file
-*.Rproj
->>>>>>> 472e7c4b2903c3a44fc051b0eea46c94e4007ccc
