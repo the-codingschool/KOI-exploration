@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # R project file
 *.Rproj
+
+# .html files
+*.html
