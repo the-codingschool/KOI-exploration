@@ -3,3 +3,6 @@
 # Load required libraries
 library(dplyr)
 library(ggplot2)
+
+# Load dataset
+koi_data <- read.csv()
