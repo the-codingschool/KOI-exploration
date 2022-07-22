@@ -41,5 +41,5 @@ vignettes/*.pdf
 # R project file
 *.Rproj
 
-# .html files
-*.html
+# DS Store
+.DS_Store
