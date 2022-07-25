@@ -20,3 +20,7 @@ View(confirmed_koi2)
 
 candidate_koi <- filter(koi_data, koi_disposition == "CANDIDATE")
 View(candidate_koi)
+
+false_koi <- filter(koi_data, koi_disposition == "FALSE POSITIVE")
+false_koi2 <- filter (false_koi, koi_pdisposition != "CANDIDATE")
+View(false_koi2)
