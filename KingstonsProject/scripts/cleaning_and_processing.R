@@ -17,3 +17,6 @@ View(na_srad_koi_data)
 confirmed_koi <- filter(koi_data, koi_disposition == "CONFIRMED")
 confirmed_koi2 <- filter(confirmed_koi, koi_pdisposition != "FALSE POSITIVE")
 View(confirmed_koi2)
+
+candidate_koi <- filter(koi_data, koi_disposition == "CANDIDATE")
+View(candidate_koi)
