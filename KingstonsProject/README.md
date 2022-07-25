@@ -4,7 +4,7 @@ The Kepler Mission is a project to identify KOI's (Kepler Objects of Interest) i
 The Kepler space telescope was retired in 2018, but the search for exoplanets is still continuing with other missions and space telescopes such as TESS.
 
 
-RESEARCH QUESTIONS:
+POTENTIAL RESEARCH QUESTIONS:
 * Why does a transit reduce brightness? Why does something passing between the star and the observer create a dip?
 * What tests are done to ensure a KOI is actually a planet?
 * How does the orbital period (or any of the other variables) help determine if the KOI is a planet or if it's in the habitable zone?
@@ -21,3 +21,11 @@ RESEARCH QUESTIONS:
 * What is the smallest combination of variables that will have the strongest correlation to the disposition?
   + What set of variables would lead to the strongest correlation to the disposition when using 1, 2, 3... up to all variables?
 
+
+
+(Probably) FINAL RESEARCH QUESTION:
+How might the orbital periods of planets be affected differently by the planetary radius and stellar surface gravity depending on its disposition?
+
+Null hypothesis: The average orbital periods of planets will stay the same between different dispositions.
+
+Alternate hypothesis: The average orbital periods of planets will differ between different dispositions.
