@@ -23,3 +23,11 @@ ggplot(na_srad_koi_data, aes(x = koi_prad, y = koi_srad)) +
 cor(na_srad_koi_data$koi_prad, na_srad_koi_data$koi_srad)
 
 
+
+ggplot(candidate_koi, aes(x = koi_score, y = koi_duration)) +
+  geom_bar(stat = "summary",
+           fun = "mean") +
+  labs(title = 'Average transit duration of "CANDIDATE" KOIs by disposition score',
+       x = "Disposition score",
+       y = "Transit duration")
+
