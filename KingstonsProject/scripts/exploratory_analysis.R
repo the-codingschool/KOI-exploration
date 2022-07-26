@@ -23,16 +23,17 @@ ggplot(clean_koi_data, aes(x = koi_pdisposition, y = koi_score, color = koi_disp
 ### There are also a few KOIs with a Kepler data disposition of FALSE POSITIVE but an archive disposition of CONFIRMED
 
 
-ggplot(na_srad_koi_data, aes(x = koi_prad, y = koi_srad, color = koi_disposition)) +
+ggplot(na_koi_data, aes(x = koi_prad, y = koi_srad, color = koi_disposition)) +
   geom_point() +
   labs(x = "Planetary radius (Earth radii)",
        y = "Stellar radius (Solar radii)")
 
 ## Multiplying stellar radius by 109 to get approximately what it'd be like in Earth radii
-ggplot(na_srad_koi_data, aes(x = koi_prad, y = koi_srad*109, color = koi_disposition)) +
+ggplot(na_koi_data, aes(x = koi_prad, y = koi_srad*109, color = koi_disposition)) +
   geom_point() +
   labs(x = "Planetary radius (Earth radii)",
        y = "Stellar radius (Earth radii)")
+
 
 
 
@@ -85,6 +86,54 @@ ggplot(koi_data, aes(x = koi_disposition, y = koi_duration)) +
 
 
 
+# RESEARCH QUESTION: How might the orbital periods of planets be affected differently
+# by the planetary radius and stellar surface gravity depending on its disposition?
 
+## How is orbital period correlated to planetary radius and stellar surface gravity
+ggplot(na_koi_data, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+cor(na_koi_data$koi_period, na_koi_data$koi_prad)
+### Correlation is very low; about 0.51%
+
+ggplot(na_koi_data, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+cor(na_koi_data$koi_period, na_koi_data$koi_slogg)
+### Correlation is also very low; about 0.19%
+#### This could be in part due to the orbital period outlier (second highest value is 2190.7010, highest value is 129995.7784)
+
+
+outlier_period_koi_data <- filter(na_koi_data, koi_period < 2200)
+
+ggplot(outlier_period_koi_data, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+cor(outlier_period_koi_data$koi_period, outlier_period_koi_data$koi_prad)
+### Raised correlation to 5.86%, still quite low
+
+ggplot(outlier_period_koi_data, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+cor(outlier_period_koi_data$koi_period, outlier_period_koi_data$koi_slogg)
+### Raised correlation to -4.72%, also quite low
+
+
+
+## How does average orbital period differ for different dispositions
+ggplot(na_koi_data, aes(x = koi_disposition, y = koi_period)) +
+  geom_bar(stat = "summary",
+           fun = "mean")
+
+## Comparing orbital period by planetary radius and stellar surface gravity for different dispositions
+ggplot(candidate_koi, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+ggplot(confirmed_koi2, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+ggplot(false_koi2, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+
+ggplot(candidate_koi, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+ggplot(confirmed_koi2, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+ggplot(false_koi2, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
 
 
