@@ -15,7 +15,7 @@ clean_koi_data <- select(koi_data, !contains("err"))
 
 ## Filtering dataset to remove all rows with NA values in the srad column, which also happens to be the 
 ## same rows that most other information columns have NA values on.
-na_srad_koi_data <- filter(clean_koi_data, !is.na(koi_srad))
+na_koi_data <- filter(clean_koi_data, !is.na(koi_srad))
 
 
 ## Filtering dataset into KOI dispositions of "CONFIRMED", "CANDIDATE", and "FALSE POSITIVE"s only
