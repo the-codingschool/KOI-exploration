@@ -144,8 +144,25 @@ koi_period_anova <- aov(data = na_koi_data, koi_period ~ koi_disposition) # does
 summary(koi_period_anova)
 TukeyHSD(koi_period_anova)
 # 2 of 3 of the groups had significant difference
-
-
+ggplot(na_koi_data, aes(x = koi_disposition, y = koi_period, fill = koi_disposition)) +
+  geom_bar(stat = "summary",
+           fun = "mean") +
+  stat_summary(fun.data = 'mean_se',
+               geom = 'errorbar',
+               width = 0.2) +
+  annotate("text", label = "*",
+           color = "springgreen4",
+           size = 10,
+           x = c("CANDIDATE", "CONFIRMED"),
+           y = c(235, 32)) +
+  annotate("text", label = "*",
+           color = "blue",
+           size = 10,
+           x = c("CANDIDATE", "FALSE POSITIVE"),
+           y = c(250, 70)) +
+  labs(x = "KOI Disposition",
+       y = "Average Orbital Period (days)")
+  
 
 ##  k-means clustering
 koi_numerics <- select(na_koi_data, koi_prad, koi_slogg) %>%
@@ -167,6 +184,10 @@ ggplot(sorted_na_koi_data2, aes(x = koi_prad, y = koi_slogg)) +
 
 ggplot(sorted_na_koi_data2, aes(x = koi_prad, y = koi_slogg)) +
   geom_point(aes(color = koi_period))
+
+
+
+
 
 
 
@@ -209,7 +230,6 @@ koi_lm_predictions <- select(koi_test, koi_slogg, koi_prad) %>%
   predict(object = koi_lm)
 koi_test$lm_pred <- koi_lm_predictions
 View(koi_test)
-# Very, very off
 
 
 ## Logistic model
@@ -234,7 +254,7 @@ koi_test <- koi_test %>%
   mutate(koi_period_cat = as.factor(ifelse(koi_period < 74.30795, "below average", "above average")))
 
 View(koi_test)
-# Only got 2 negative values while everything else is positive, so not good
+# Only got a few negative values
 
 
 ## Gradient boosting machine
@@ -276,6 +296,32 @@ total_vals <- nrow(koi_test)
 
 accuracy <- true_vals/total_vals
 accuracy
+
+
+# Linear model plot
+ggplot(koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = koi_test, aes(x = lm_pred, color = "red"))
+ggplot(koi_test, aes(x = koi_period, y = lm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Logistic model plot
+ggplot(koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = koi_test, aes(x = glm_pred, color = "red"))
+ggplot(koi_test, aes(x = koi_period, y = glm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Gradient boosting machine plot
+ggplot(koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = koi_test, aes(x = gbm_pred, color = "red"))
+ggplot(koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+summary(koi_gbm)
 
 
 
@@ -344,7 +390,6 @@ confirmed_koi_test <- confirmed_koi_test %>%
   mutate(confirmed_koi_period_cat = as.factor(ifelse(koi_period < 27.626, "below average", "above average")))
 
 View(confirmed_koi_test)
-# No negative values at all, so not good
 
 
 ## Gradient boosting machine
@@ -368,12 +413,12 @@ View(confirmed_koi_test)
 library(Metrics)
 
 # calculate rmse between predictions and true values
-rmse(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
-rmse(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
+confirmed_lm_rmse <- rmse(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
+confirmed_gbm_rmse <- rmse(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
 
 # calculate mae between predictions and true values
-mae(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
-mae(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
+confirmed_lm_mae <- mae(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
+confirmed_gbm_mae <- mae(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
 
 
 ## Accuracy
@@ -381,17 +426,47 @@ confirmed_koi_test <- confirmed_koi_test %>%
   mutate(glm_period_cat = ifelse(glm_pred < 0, "below average", "above average"))
 View(confirmed_koi_test)
 
-true_vals <- sum(confirmed_koi_test$glm_period_cat == confirmed_koi_test$confirmed_koi_period_cat)
-total_vals <- nrow(confirmed_koi_test)
+confirmed_true_vals <- sum(confirmed_koi_test$glm_period_cat == confirmed_koi_test$confirmed_koi_period_cat)
+confirmed_total_vals <- nrow(confirmed_koi_test)
 
-accuracy <- true_vals/total_vals
-accuracy
-
-
+confirmed_accuracy <- confirmed_true_vals/confirmed_total_vals
+confirmed_accuracy
 
 
+# Linear model plot
+ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = confirmed_koi_test, aes(x = lm_pred, color = "red"))
+ggplot(confirmed_koi_test, aes(x = koi_period, y = lm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Logistic model plot
+ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = confirmed_koi_test, aes(x = glm_pred, color = "red"))
+ggplot(confirmed_koi_test, aes(x = koi_period, y = glm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Gradient boosting machine plot
+ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = confirmed_koi_test, aes(x = gbm_pred, color = "red"))
+ggplot(confirmed_koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+summary(confirmed_koi_gbm)
 
 
+# Comparing model accuracy between lm and gbm
+confirmed_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
+confirmed_model_accuracy <- rbind(confirmed_model_accuracy, data.frame(model_type = "lm", rmse = confirmed_lm_rmse, mae = confirmed_lm_mae))
+confirmed_model_accuracy <- rbind(confirmed_model_accuracy, data.frame(model_type = "gbm", rmse = confirmed_gbm_rmse, mae = confirmed_gbm_mae))
+confirmed_model_accuracy
+ggplot(data = confirmed_model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5)
 
 
 
@@ -432,13 +507,11 @@ summary(candidate_koi_lm)
 candidate_koi_lm_predictions <- select(candidate_koi_test, koi_slogg, koi_prad) %>%
   predict(object = candidate_koi_lm)
 candidate_koi_test$lm_pred <- candidate_koi_lm_predictions
-head(candidate_koi_test)
-# Very, very off
+View(candidate_koi_test)
 
 
 ## Logistic model
 mean(na_candidate_koi$koi_period)
-
 candidate_koi_train_glm <- candidate_koi_train %>%
   mutate(koi_period_cat = as.factor(ifelse(koi_period < 164.9336, "below average", "above average")))
 head(candidate_koi_train_glm)
@@ -455,13 +528,218 @@ candidate_koi_glm_preds <- candidate_koi_test %>%
 candidate_koi_test$glm_pred <- candidate_koi_glm_preds
 
 candidate_koi_test <- candidate_koi_test %>%
-  mutate(koi_period_cat = as.factor(ifelse(koi_period < 164.9336, "below average", "above average")))
+  mutate(candidate_koi_period_cat = as.factor(ifelse(koi_period < 164.9336, "below average", "above average")))
+
 View(candidate_koi_test)
 
-iris_train_2species <- filter(iris_train, Species %in% c("setosa", "virginica"))
+
+## Gradient boosting machine
+library(gbm)
 
 # create the model
-iris_glm <- glm(Species ~ Sepal.Width + Sepal.Length + Petal.Width + Petal.Length,
-                data = iris_train_2species,
-                family = binomial(link = "logit"))
+candidate_koi_gbm <- gbm(koi_period ~ koi_prad + koi_slogg,
+                         data = candidate_koi_test,
+                         n.trees = 500) # shouldn't use koi_disposition as there is only one unique value
+summary(candidate_koi_gbm)
+
+# select out only the x-values we used from test and predict
+candidate_koi_gbm_preds <- candidate_koi_test %>%
+  select(koi_slogg, koi_prad) %>%
+  predict(object = candidate_koi_gbm)
+
+# save predictions back into test set
+candidate_koi_test$gbm_pred <- candidate_koi_gbm_preds
+View(candidate_koi_test)
+
+library(Metrics)
+
+# calculate rmse between predictions and true values
+candidate_lm_rmse <- rmse(candidate_koi_test$koi_period, candidate_koi_test$lm_pred)
+candidate_gbm_rmse <- rmse(candidate_koi_test$koi_period, candidate_koi_test$gbm_pred) # wins, smaller error
+
+# calculate mae between predictions and true values
+candidate_lm_mae <- mae(candidate_koi_test$koi_period, candidate_koi_test$lm_pred) # wins, smaller error
+candidate_gbm_mae <- mae(candidate_koi_test$koi_period, candidate_koi_test$gbm_pred)
+
+
+## Accuracy
+candidate_koi_test <- candidate_koi_test %>%
+  mutate(glm_period_cat = ifelse(glm_pred < 0, "below average", "above average"))
+View(candidate_koi_test)
+
+candidate_true_vals <- sum(candidate_koi_test$glm_period_cat == candidate_koi_test$candidate_koi_period_cat)
+candidate_total_vals <- nrow(candidate_koi_test)
+
+candidate_accuracy <- candidate_true_vals/candidate_total_vals
+candidate_accuracy
+
+
+# Linear model plot
+ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = candidate_koi_test, aes(x = lm_pred, color = "red"))
+ggplot(candidate_koi_test, aes(x = koi_period, y = lm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Logistic model plot
+ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = candidate_koi_test, aes(x = glm_pred, color = "red"))
+ggplot(candidate_koi_test, aes(x = koi_period, y = glm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Gradient boosting machine plot
+ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = candidate_koi_test, aes(x = gbm_pred, color = "red"))
+ggplot(candidate_koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+summary(candidate_koi_gbm)
+
+
+# Comparing model accuracy between lm and gbm
+candidate_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
+candidate_model_accuracy <- candidate_model_accuracy[-1,]
+candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "lm", rmse = candidate_lm_rmse, mae = candidate_lm_mae))
+candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "gbm", rmse = candidate_gbm_rmse, mae = candidate_gbm_mae))
+candidate_model_accuracy
+ggplot(data = candidate_model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5)
+
+
+
+
+
+
+
+
+### Supervised modeling (FALSE POSITIVE KOI)
+ggplot(na_false_koi, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+ggplot(na_false_koi, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+
+cor(na_false_koi$koi_period, na_false_koi$koi_prad)
+cor(na_false_koi$koi_period, na_false_koi$koi_slogg)
+
+# Choose features
+# koi_prad, koi_slogg, koi_disposition
+
+# Split into training, test, and validation sets
+false_koi_len <-nrow(na_false_koi)
+
+na_false_koi$label <-c(rep("training", ceiling(.6*false_koi_len)),
+                           rep("test", ceiling(.2*false_koi_len)),
+                           rep("validation", ceiling(.2*false_koi_len))) %>%
+  sample(false_koi_len, replace = F)
+
+false_koi_train <- filter(na_false_koi, label == "training")
+false_koi_test <- filter(na_false_koi, label == "test")
+false_koi_valid <- filter(na_false_koi, label == "validation")
+
+
+## Linear model
+false_koi_lm <- lm(koi_period ~ koi_prad + koi_slogg, data = false_koi_train) 
+false_koi_lm
+summary(false_koi_lm)
+
+false_koi_lm_predictions <- select(false_koi_test, koi_slogg, koi_prad) %>%
+  predict(object = false_koi_lm)
+false_koi_test$lm_pred <- false_koi_lm_predictions
+View(false_koi_test)
+
+
+## Logistic model
+# create 2 categories
+mean(na_false_koi$koi_period)
+false_koi_train_glm <- false_koi_train %>%
+  mutate(false_koi_period_cat = as.factor(ifelse(koi_period < 62.93709, "below average", "above average")))
+head(false_koi_train_glm)
+
+false_koi_glm <- glm(false_koi_period_cat ~ koi_prad + koi_slogg,
+                         data = false_koi_train_glm,
+                         family = binomial(link = "logit")) # can't use koi_disposition as there is only one unique value
+summary(false_koi_glm)
+
+false_koi_glm_preds <- false_koi_test %>%
+  select(koi_slogg, koi_prad) %>%
+  predict(object = false_koi_glm)
+
+false_koi_test$glm_pred <- false_koi_glm_preds
+false_koi_test <- false_koi_test %>%
+  mutate(false_koi_period_cat = as.factor(ifelse(koi_period < 62.93709, "below average", "above average")))
+
+View(false_koi_test)
+
+
+## Gradient boosting machine
+library(gbm)
+
+# create the model
+false_koi_gbm <- gbm(koi_period ~ koi_prad + koi_slogg,
+                         data = false_koi_test,
+                         n.trees = 500) # shouldn't use koi_disposition as there is only one unique value
+summary(false_koi_gbm)
+
+# select out only the x-values we used from test and predict
+false_koi_gbm_preds <- false_koi_test %>%
+  select(koi_slogg, koi_prad) %>%
+  predict(object = false_koi_gbm)
+
+# save predictions back into test set
+false_koi_test$gbm_pred <- false_koi_gbm_preds
+View(false_koi_test)
+
+library(Metrics)
+
+# calculate rmse between predictions and true values
+candidate_lm_rmse <- rmse(false_koi_test$koi_period, false_koi_test$lm_pred)
+candidate_gbm_rmse(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
+
+# calculate mae between predictions and true values
+candidate_lm_mae <- mae(false_koi_test$koi_period, false_koi_test$lm_pred)
+candidate_gbm_mae <- mae(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
+
+
+## Accuracy
+false_koi_test <- false_koi_test %>%
+  mutate(glm_period_cat = ifelse(glm_pred < 0, "below average", "above average"))
+View(false_koi_test)
+
+false_true_vals <- sum(false_koi_test$glm_period_cat == false_koi_test$false_koi_period_cat)
+false_total_vals <- nrow(false_koi_test)
+
+accuracy <- false_true_vals/false_total_vals
+accuracy
+
+
+# Linear model plot
+ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = false_koi_test, aes(x = lm_pred, color = "red"))
+ggplot(false_koi_test, aes(x = koi_period, y = lm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Logistic model plot
+ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
+  geom_point() +
+  geom_line(data = false_koi_test, aes(x = glm_pred, color = "red"))
+ggplot(false_koi_test, aes(x = koi_period, y = glm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+
+# Gradient boosting machine plot
+ggplot(false_koi_test, aes(x = koi_period, y = koi_slogg)) +
+  geom_point() +
+  geom_line(data = false_koi_test, aes(x = gbm_pred, color = "red"))
+ggplot(false_koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue")
+summary(false_koi_gbm)
+
 
