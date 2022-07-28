@@ -229,8 +229,12 @@ koi_glm_preds <- koi_test %>%
   predict(object = koi_glm)
 
 koi_test$glm_pred <- koi_glm_preds
-summary(koi_glm)
+
+koi_test <- koi_test %>%
+  mutate(koi_period_cat = as.factor(ifelse(koi_period < 74.30795, "below average", "above average")))
+
 View(koi_test)
+# Only got 2 negative values while everything else is positive, so not good
 
 
 ## Gradient boosting machine
@@ -249,9 +253,6 @@ koi_gbm_preds <- koi_test %>%
 
 # save predictions back into test set
 koi_test$gbm_pred <- koi_gbm_preds
-
-
-## Evaluate performance of models
 View(koi_test)
 
 library(Metrics)
@@ -261,8 +262,8 @@ rmse(koi_test$koi_period, koi_test$lm_pred)
 rmse(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
 
 # calculate mae between predictions and true values
-mae(koi_test$koi_period, koi_test$lm_pred) # wins, smaller error
-mae(koi_test$koi_period, koi_test$gbm_pred) 
+mae(koi_test$koi_period, koi_test$lm_pred)
+mae(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
 
 
 ## Accuracy
@@ -286,13 +287,120 @@ accuracy
 
 
 
+### Supervised modeling (CONFIRMED KOI)
+ggplot(na_confirmed_koi, aes(x = koi_period, y = koi_prad)) +
+  geom_point()
+ggplot(na_confirmed_koi, aes(x = koi_period, y = koi_slogg)) +
+  geom_point()
+
+cor(na_confirmed_koi$koi_period, na_confirmed_koi$koi_prad)
+cor(na_confirmed_koi$koi_period, na_confirmed_koi$koi_slogg)
+
+# Choose features
+# koi_prad, koi_slogg, koi_disposition
+
+# Split into training, test, and validation sets
+confirmed_koi_len <-nrow(na_confirmed_koi)
+
+na_confirmed_koi$label <-c(rep("training", ceiling(.6*confirmed_koi_len)),
+                      rep("test", ceiling(.2*confirmed_koi_len)),
+                      rep("validation", ceiling(.2*confirmed_koi_len))) %>%
+  sample(confirmed_koi_len, replace = F)
+
+confirmed_koi_train <- filter(na_confirmed_koi, label == "training")
+confirmed_koi_test <- filter(na_confirmed_koi, label == "test")
+confirmed_koi_valid <- filter(na_confirmed_koi, label == "validation")
+
+
+## Linear model
+confirmed_koi_lm <- lm(koi_period ~ koi_prad + koi_slogg, data = confirmed_koi_train) 
+confirmed_koi_lm
+summary(confirmed_koi_lm)
+
+confirmed_koi_lm_predictions <- select(confirmed_koi_test, koi_slogg, koi_prad) %>%
+  predict(object = confirmed_koi_lm)
+confirmed_koi_test$lm_pred <- confirmed_koi_lm_predictions
+View(confirmed_koi_test)
+
+
+## Logistic model
+# create 2 categories
+mean(na_confirmed_koi$koi_period)
+confirmed_koi_train_glm <- confirmed_koi_train %>%
+  mutate(confirmed_koi_period_cat = as.factor(ifelse(koi_period < 27.626, "below average", "above average")))
+head(confirmed_koi_train_glm)
+
+confirmed_koi_glm <- glm(confirmed_koi_period_cat ~ koi_prad + koi_slogg,
+               data = confirmed_koi_train_glm,
+               family = binomial(link = "logit")) # can't use koi_disposition as there is only one unique value
+summary(confirmed_koi_glm)
+
+confirmed_koi_glm_preds <- confirmed_koi_test %>%
+  select(koi_slogg, koi_prad) %>%
+  predict(object = confirmed_koi_glm)
+
+confirmed_koi_test$glm_pred <- confirmed_koi_glm_preds
+confirmed_koi_test <- confirmed_koi_test %>%
+  mutate(confirmed_koi_period_cat = as.factor(ifelse(koi_period < 27.626, "below average", "above average")))
+
+View(confirmed_koi_test)
+# No negative values at all, so not good
+
+
+## Gradient boosting machine
+library(gbm)
+
+# create the model
+confirmed_koi_gbm <- gbm(koi_period ~ koi_prad + koi_slogg,
+               data = confirmed_koi_test,
+               n.trees = 500) # shouldn't use koi_disposition as there is only one unique value
+summary(confirmed_koi_gbm)
+
+# select out only the x-values we used from test and predict
+confirmed_koi_gbm_preds <- confirmed_koi_test %>%
+  select(koi_slogg, koi_prad) %>%
+  predict(object = confirmed_koi_gbm)
+
+# save predictions back into test set
+confirmed_koi_test$gbm_pred <- confirmed_koi_gbm_preds
+View(confirmed_koi_test)
+
+library(Metrics)
+
+# calculate rmse between predictions and true values
+rmse(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
+rmse(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
+
+# calculate mae between predictions and true values
+mae(confirmed_koi_test$koi_period, confirmed_koi_test$lm_pred)
+mae(confirmed_koi_test$koi_period, confirmed_koi_test$gbm_pred) # wins, smaller error
+
+
+## Accuracy
+confirmed_koi_test <- confirmed_koi_test %>%
+  mutate(glm_period_cat = ifelse(glm_pred < 0, "below average", "above average"))
+View(confirmed_koi_test)
+
+true_vals <- sum(confirmed_koi_test$glm_period_cat == confirmed_koi_test$confirmed_koi_period_cat)
+total_vals <- nrow(confirmed_koi_test)
+
+accuracy <- true_vals/total_vals
+accuracy
 
 
 
 
 
 
-### Supervised modeling (candidate KOI)
+
+
+
+
+
+
+
+
+### Supervised modeling (CANDIDATE KOI)
 ggplot(na_candidate_koi, aes(x = koi_period, y = koi_prad)) +
   geom_point()
 ggplot(na_candidate_koi, aes(x = koi_period, y = koi_slogg)) +
