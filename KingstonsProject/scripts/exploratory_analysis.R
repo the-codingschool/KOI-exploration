@@ -148,35 +148,25 @@ TukeyHSD(koi_period_anova)
 
 
 ##  k-means clustering
-koi_numerics <- select(sorted_na_koi_data, koi_period, koi_prad, koi_slogg) %>%
+koi_numerics <- select(na_koi_data, koi_prad, koi_slogg) %>%
   scale()
 
 koi_clusters <- kmeans(koi_numerics, centers = 3)
 koi_clusters
 
 koi_clusters$cluster # vector designating a cluster for each row
-sorted_na_koi_data$cluster <- koi_clusters$cluster
-View(sorted_na_koi_data)
-sorted_na_koi_data2 <- arrange(sorted_na_koi_data, cluster)
+na_koi_data$cluster <- koi_clusters$cluster
+View(na_koi_data)
+sorted_na_koi_data2 <- arrange(na_koi_data, cluster)
 View(sorted_na_koi_data2)
+# Removing the extreme outlier to make colors more visible
+sorted_na_koi_data2 <- filter(sorted_na_koi_data2, koi_period < 2200)
 
-ggplot(sorted_na_koi_data, aes(x = koi_period, y = koi_prad)) +
-  geom_point(aes(color = as.factor(cluster))) +
-  xlim(0,750) +
-  ylim(0,1000)
-
-ggplot(sorted_na_koi_data, aes(x = koi_period, y = koi_prad)) +
-  geom_point(aes(color = koi_disposition)) +
-  xlim(0,750) +
-  ylim(0,1000)
-
-
-ggplot(sorted_na_koi_data, aes(x = koi_period, y = koi_slogg)) +
+ggplot(sorted_na_koi_data2, aes(x = koi_prad, y = koi_slogg)) +
   geom_point(aes(color = as.factor(cluster)))
 
-ggplot(sorted_na_koi_data, aes(x = koi_period, y = koi_slogg)) +
-  geom_point(aes(color = koi_disposition))
-
+ggplot(sorted_na_koi_data2, aes(x = koi_prad, y = koi_slogg)) +
+  geom_point(aes(color = koi_period))
 
 
 
