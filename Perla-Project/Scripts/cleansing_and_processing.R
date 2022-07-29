@@ -23,39 +23,28 @@ koi_data2_train_filtered <- filter(koi_data2_train, koi_disposition %in% c("FALS
 
 glm_fit <- glm(as.factor(koi_disposition) ~ koi_time0bk + koi_duration + koi_depth + koi_model_snr, data = koi_data2_train_filtered, na.action = na.exclude, family = binomial(link='logit'))
 
-koi_data2_test_x_vals <- koi_data2_test %>% filter(koi_disposition %in% c("FALSE POSITIVE", "CONFIRMED")) %>% select(koi_time0bk, koi_duration, koi_depth, koi_model_snr)
+koi_data2_test_x_vals <- koi_data2_test %>% filter(koi_disposition %in% c("FALSE POSITIVE", "CONFIRMED")) %>%
+  select(koi_time0bk, koi_duration, koi_depth, koi_model_snr)
 
-predict(glm_fit, koi_data2_test_x_vals)
+length(predict(glm_fit, koi_data2_test_x_vals))
+koi_data2_test_2disp <- filter(koi_data2_test, koi_disposition %in% c("FALSE POSITIVE", "CONFIRMED"))
+koi_data2_test_2disp$glm_preds <- predict(glm_fit, koi_data2_test_x_vals)
+View(koi_data2_test_2disp)
 
+koi_data2_test_2disp$pred_disp <- ifelse(koi_data2_test_2disp$glm_preds < 0, "CONFIRMED", "FALSE POSITIVE")
 
-koi_data2_train_2 <- filter(koi_data2_train, koi_disposition %in% c("FALSE POSITIVE","CONFIRMED"))
+na.omit(koi_data2_test_2disp)
+koi_data2_test_2disp <- na.omit(koi_data2_test_2disp)
 
-koi_data2_glm <- glm(as.factor(koi_disposition) ~ koi_time0bk + koi_duration + koi_depth + koi_model_snr, 
-                data = koi_data2_train_2,
-                family = binomial(link = "logit"))
-
-summary(koi_data2_glm)
-
-koi_data2_test_2 <- koi_data2_test %>% 
-  filter(koi_disposition %in% c("FALSE POSITIVE","CONFIRMED")) 
-
-koi_data2_2_preds <- koi_data2_test_2 %>%
-  select(-koi_disposition) %>%
-  predict(object = koi_data2_glm)
-
-koi_data2_test_2$glm_2_pred <- koi_data2_2_preds
-
-View(koi_data2_test)
-
-
-true_vals <-sum(koi_data2_test$glm_disposition == koi_data2_test$petal_length_cat)
-total_vals <- nrow(koi_data2_test)
-
-accuracy <- true_vals/total_vals 
-accuracy
+accuracy(koi_data2_test_2disp$koi_disposition, koi_data2_test_2disp$pred_disp)
 
 f1(koi_data2_test$glm_disposition, koi_data2_test$petal_length_cat)
 
+View(koi_data2_test_2disp)
 
+
+ggplot(data = koi_data2_test_2disp, aes(x = koi_disposition, fill = koi_disposition == pred_disp)) +
+  labs (title = "Disposition Comparison") +
+  geom_bar()
 
 
