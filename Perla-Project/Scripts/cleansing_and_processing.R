@@ -1,6 +1,8 @@
 View(koi_data)
 library(dplyr)
 library(ggplot2)
+library(Metrics)
+
 koi_data2 <- select(koi_data, koi_disposition, koi_time0bk, koi_duration, koi_depth, koi_model_snr)
 View(koi_data2)
 
@@ -47,4 +49,11 @@ ggplot(data = koi_data2_test_2disp, aes(x = koi_disposition, fill = koi_disposit
   labs (title = "Disposition Comparison") +
   geom_bar()
 
+ggplot(data = koi_data, aes(x = koi_disposition, fill = koi_disposition)) +
+  labs (title = "Exoplanet Disposition") +
+  geom_bar()
+
+saveRDS(koi_data2_test_2disp, file = "koi_data2_test_2disp.RDS")
+
+saveRDS(koi_data2, file = "koi_data2.RDS")
 
