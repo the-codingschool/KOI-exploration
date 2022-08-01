@@ -8,14 +8,25 @@ output:
     df_print: paged
 ---
 
-```{r pressure, echo=FALSE}
-ggplot(data = koi_data, aes(x = koi_disposition, fill = koi_disposition)) +
+```{r}
+
+library(ggplot2)
+
+koi_data2 <- readRDS("koi_data2.RDS")
+
+
+ggplot(data = koi_data2, aes(x = koi_disposition, fill = koi_disposition)) +
   labs (title = "Exoplanet Disposition") +
   geom_bar()
+
 ```
-```{r pressure, echo=FALSE}
-ggplot(data = koi_data2_test_2disp, aes(x = koi_disposition, fill = koi_disposition == pred_disp)) +
+```{r}
+
+koi_2disp <- readRDS("koi_data2_test_2disp.RDS")
+
+ggplot(data = koi_2disp, aes(x = koi_disposition, fill = koi_disposition == pred_disp)) +
   labs (title = "Disposition Comparison") +
   geom_bar()
+
 ```
 
