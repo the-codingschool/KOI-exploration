@@ -13,7 +13,7 @@ View(koi_data)
 #View(name_koi_data)
 
 
-
+## Test plots
 ggplot(clean_koi_data, aes(x = koi_pdisposition, y = koi_score, color = koi_disposition)) +
   geom_boxplot() +
   labs(x = "KOI Exoplanet Archive disposition",
@@ -103,6 +103,7 @@ cor(na_koi_data$koi_period, na_koi_data$koi_slogg)
 
 
 outlier_period_koi_data <- filter(na_koi_data, koi_period < 2200)
+saveRDS(outlier_period_koi_data, "KingstonsProject/data/outlier_period_koi_data.RDS")
 
 ggplot(outlier_period_koi_data, aes(x = koi_period, y = koi_prad)) +
   geom_point()
@@ -140,9 +141,10 @@ ggplot(false_koi2, aes(x = koi_period, y = koi_slogg)) +
 
 
 ## ANOVA test
-koi_period_anova <- aov(data = na_koi_data, koi_period ~ koi_disposition) # does orbital period change when we compare it based on disposition?
+# does orbital period change when we compare it based on disposition?
+koi_period_anova <- aov(data = na_koi_data, koi_period ~ koi_disposition)
 summary(koi_period_anova)
-TukeyHSD(koi_period_anova)
+anova_results <- TukeyHSD(koi_period_anova)$koi_disposition
 # 2 of 3 of the groups had significant difference
 ggplot(na_koi_data, aes(x = koi_disposition, y = koi_period, fill = koi_disposition)) +
   geom_bar(stat = "summary",
@@ -161,8 +163,42 @@ ggplot(na_koi_data, aes(x = koi_disposition, y = koi_period, fill = koi_disposit
            x = c("CANDIDATE", "FALSE POSITIVE"),
            y = c(250, 70)) +
   labs(x = "KOI Disposition",
-       y = "Average Orbital Period (days)")
+       y = "Average Orbital Period (days)",
+       title = "Average Orbital Period by Disposition")
+# Without extreme outlier
+View(outlier_period_koi_data)
+outlier_koi_period_anova <- aov(data = outlier_period_koi_data, koi_period ~ koi_disposition) # does orbital period change when we compare it based on disposition?
+summary(outlier_koi_period_anova)
+outlier_anova_results <- TukeyHSD(outlier_koi_period_anova)$koi_disposition
+# all 3 of the groups had significant difference
+ggplot(outlier_period_koi_data, aes(x = koi_disposition, y = koi_period, fill = koi_disposition)) +
+  geom_bar(stat = "summary",
+           fun = "mean") +
+  stat_summary(fun.data = 'mean_se',
+               geom = 'errorbar',
+               width = 0.2) +
+  annotate("text", label = "*",
+           color = "springgreen4",
+           size = 10,
+           x = c("CANDIDATE", "CONFIRMED"),
+           y = c(108, 32)) +
+  annotate("text", label = "*",
+           color = "blue",
+           size = 10,
+           x = c("CANDIDATE", "FALSE POSITIVE"),
+           y = c(115, 68)) +
+  annotate("text", label = "*",
+           color = "red",
+           size = 10,
+           x = c("CONFIRMED", "FALSE POSITIVE"),
+           y = c(39, 75)) +
+  labs(x = "KOI Disposition",
+       y = "Average Orbital Period (days)",
+       title = "Average Orbital Period by Disposition Without Extreme Outlier")
   
+
+
+
 
 ##  k-means clustering
 koi_numerics <- select(na_koi_data, koi_prad, koi_slogg) %>%
@@ -278,17 +314,17 @@ View(koi_test)
 library(Metrics)
 
 # calculate rmse between predictions and true values
-rmse(koi_test$koi_period, koi_test$lm_pred)
-rmse(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
+lm_rmse <- rmse(koi_test$koi_period, koi_test$lm_pred)
+gbm_rmse <- rmse(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
 
 # calculate mae between predictions and true values
-mae(koi_test$koi_period, koi_test$lm_pred)
-mae(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
+lm_mae <- mae(koi_test$koi_period, koi_test$lm_pred)
+gbm_mae <- mae(koi_test$koi_period, koi_test$gbm_pred) # wins, smaller error
 
 
 ## Accuracy
 koi_test <- koi_test %>%
-  mutate(glm_period_cat = ifelse(glm_pred < 0, "below average", "above average"))
+  mutate(glm_period_cat = ifelse(glm_pred > 0, "below average", "above average"))
 View(koi_test)
 
 true_vals <- sum(koi_test$glm_period_cat == koi_test$koi_period_cat)
@@ -298,30 +334,68 @@ accuracy <- true_vals/total_vals
 accuracy
 
 
-# Linear model plot
+## Saving dataset as RDS file
+saveRDS(koi_test, "KingstonsProject/data/koi_test.RDS")
+
+
+# Linear model plots
 ggplot(koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
-  geom_line(data = koi_test, aes(x = lm_pred, color = "red"))
+  geom_line(data = koi_test, aes(x = lm_pred), color = "indianred2") +
+  labs(x = "Orbital Period (days)",
+       y= "Stellar Surface Gravity",
+       title = "All KOIs: Predictions of Orbital Period by Stellar Surface Gravity")
 ggplot(koi_test, aes(x = koi_period, y = lm_pred)) +
   geom_point() +
-  geom_abline(color = "blue")
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "All KOIs: Actual Orbital Period Compared to Predicted Orbital Period")
 
 # Logistic model plot
+ggplot(koi_test, aes(x = koi_period_cat, fill = glm_period_cat)) +
+  geom_bar() +
+  labs(x = "Actual Results",
+       fill = "Prediction")
+
+# Gradient boosting machine plots
 ggplot(koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
-  geom_line(data = koi_test, aes(x = glm_pred, color = "red"))
-ggplot(koi_test, aes(x = koi_period, y = glm_pred)) +
-  geom_point() +
-  geom_abline(color = "blue")
-
-# Gradient boosting machine plot
-ggplot(koi_test, aes(x = koi_period, y = koi_slogg)) +
-  geom_point() +
-  geom_line(data = koi_test, aes(x = gbm_pred, color = "red"))
+  geom_line(data = koi_test, aes(x = gbm_pred), color = "indianred2") +
+  labs(x = "Orbital period (days)",
+       y= "Planetary Radius (Earth radii)",
+       title = "All KOIs")
 ggplot(koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_point() +
-  geom_abline(color = "blue")
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "All KOIs: Actual Orbital Period Compared to Predicted Orbital Period")
 summary(koi_gbm)
+
+
+# Comparing model accuracy between lm and gbm
+model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
+model_accuracy <- model_accuracy[-1,]
+model_accuracy <- rbind(model_accuracy, data.frame(model_type = "lm", rmse = lm_rmse, mae = lm_mae))
+model_accuracy <- rbind(model_accuracy, data.frame(model_type = "gbm", rmse = gbm_rmse, mae = gbm_mae))
+model_accuracy
+ggplot(data = model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.55,
+           y = 120) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.55,
+           y = 116) +
+  labs(x = "Model Type",
+       y = "Score",
+       title = "All KOIs: RMSE and MAE Scores for Gradient Boosting Machine and Linear Model")
 
 
 
@@ -433,7 +507,11 @@ confirmed_accuracy <- confirmed_true_vals/confirmed_total_vals
 confirmed_accuracy
 
 
-# Linear model plot
+## Saving dataset as RDS file
+saveRDS(confirmed_koi_test, "KingstonsProject/data/confirmed_koi_test.RDS")
+
+
+# Linear model plots
 ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
   geom_line(data = confirmed_koi_test, aes(x = lm_pred, color = "red"))
@@ -442,17 +520,17 @@ ggplot(confirmed_koi_test, aes(x = koi_period, y = lm_pred)) +
   geom_abline(color = "blue")
 
 # Logistic model plot
-ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
-  geom_point() +
-  geom_line(data = confirmed_koi_test, aes(x = glm_pred, color = "red"))
-ggplot(confirmed_koi_test, aes(x = koi_period, y = glm_pred)) +
-  geom_point() +
-  geom_abline(color = "blue")
+ggplot(confirmed_koi_test, aes(x = confirmed_koi_period_cat, fill = glm_period_cat)) +
+  geom_bar() +
+  labs(x = "Actual Results",
+       fill = "Prediction")
 
-# Gradient boosting machine plot
+# Gradient boosting machine plots
 ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
-  geom_line(data = confirmed_koi_test, aes(x = gbm_pred, color = "red"))
+  geom_line(data = confirmed_koi_test, aes(x = gbm_pred), color = "indianred2") +
+  labs(x = "Orbital Period (days)",
+       y = "Planetary Radius (Earth radii)")
 ggplot(confirmed_koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_point() +
   geom_abline(color = "blue")
@@ -461,12 +539,28 @@ summary(confirmed_koi_gbm)
 
 # Comparing model accuracy between lm and gbm
 confirmed_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
+confirmed_model_accuracy <- confirmed_model_accuracy[-1,]
 confirmed_model_accuracy <- rbind(confirmed_model_accuracy, data.frame(model_type = "lm", rmse = confirmed_lm_rmse, mae = confirmed_lm_mae))
 confirmed_model_accuracy <- rbind(confirmed_model_accuracy, data.frame(model_type = "gbm", rmse = confirmed_gbm_rmse, mae = confirmed_gbm_mae))
 confirmed_model_accuracy
 ggplot(data = confirmed_model_accuracy, aes(x = model_type)) +
   geom_point(aes(y = rmse), color = "red", size = 5) +
-  geom_point(aes(y = mae), color = "blue", size = 5)
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.55,
+           y = 45) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.55,
+           y = 43) +
+  labs(x = "Model type",
+       y = "Score",
+       title = "Confirmed KOIs")
+
+
 
 
 
@@ -574,7 +668,7 @@ candidate_accuracy <- candidate_true_vals/candidate_total_vals
 candidate_accuracy
 
 
-# Linear model plot
+# Linear model plots
 ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
   geom_line(data = candidate_koi_test, aes(x = lm_pred, color = "red"))
@@ -583,17 +677,18 @@ ggplot(candidate_koi_test, aes(x = koi_period, y = lm_pred)) +
   geom_abline(color = "blue")
 
 # Logistic model plot
-ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
-  geom_point() +
-  geom_line(data = candidate_koi_test, aes(x = glm_pred, color = "red"))
-ggplot(candidate_koi_test, aes(x = koi_period, y = glm_pred)) +
-  geom_point() +
-  geom_abline(color = "blue")
+ggplot(candidate_koi_test, aes(x = candidate_koi_period_cat, fill = glm_period_cat)) +
+  geom_bar() +
+  labs(x = "Actual results",
+       fill = "Prediction")
 
-# Gradient boosting machine plot
+# Gradient boosting machine plots
 ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
-  geom_line(data = candidate_koi_test, aes(x = gbm_pred, color = "red"))
+  geom_line(data = candidate_koi_test, aes(x = gbm_pred), color = "indianred2") +
+  labs(title = "Candidate KOIs",
+       x = "Orbital period (days)",
+       y = "Stellar surface gravity")
 ggplot(candidate_koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_point() +
   geom_abline(color = "blue")
@@ -602,13 +697,27 @@ summary(candidate_koi_gbm)
 
 # Comparing model accuracy between lm and gbm
 candidate_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
-candidate_model_accuracy <- candidate_model_accuracy[-1,]
+# candidate_model_accuracy <- candidate_model_accuracy[-1,]
 candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "lm", rmse = candidate_lm_rmse, mae = candidate_lm_mae))
 candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "gbm", rmse = candidate_gbm_rmse, mae = candidate_gbm_mae))
 candidate_model_accuracy
 ggplot(data = candidate_model_accuracy, aes(x = model_type)) +
   geom_point(aes(y = rmse), color = "red", size = 5) +
-  geom_point(aes(y = mae), color = "blue", size = 5)
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.55,
+           y = 144) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.55,
+           y = 140) +
+  labs(x = "Model type",
+       y = "Score",
+       title = "Candidate KOIs")
+
 
 
 
@@ -697,12 +806,12 @@ View(false_koi_test)
 library(Metrics)
 
 # calculate rmse between predictions and true values
-candidate_lm_rmse <- rmse(false_koi_test$koi_period, false_koi_test$lm_pred)
-candidate_gbm_rmse(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
+false_lm_rmse <- rmse(false_koi_test$koi_period, false_koi_test$lm_pred)
+false_gbm_rmse <- rmse(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
 
 # calculate mae between predictions and true values
-candidate_lm_mae <- mae(false_koi_test$koi_period, false_koi_test$lm_pred)
-candidate_gbm_mae <- mae(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
+false_lm_mae <- mae(false_koi_test$koi_period, false_koi_test$lm_pred)
+false_gbm_mae <- mae(false_koi_test$koi_period, false_koi_test$gbm_pred) # wins, smaller error
 
 
 ## Accuracy
@@ -713,11 +822,11 @@ View(false_koi_test)
 false_true_vals <- sum(false_koi_test$glm_period_cat == false_koi_test$false_koi_period_cat)
 false_total_vals <- nrow(false_koi_test)
 
-accuracy <- false_true_vals/false_total_vals
-accuracy
+false_accuracy <- false_true_vals/false_total_vals
+false_accuracy
 
 
-# Linear model plot
+# Linear model plots
 ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
   geom_line(data = false_koi_test, aes(x = lm_pred, color = "red"))
@@ -726,20 +835,46 @@ ggplot(false_koi_test, aes(x = koi_period, y = lm_pred)) +
   geom_abline(color = "blue")
 
 # Logistic model plot
-ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
-  geom_point() +
-  geom_line(data = false_koi_test, aes(x = glm_pred, color = "red"))
-ggplot(false_koi_test, aes(x = koi_period, y = glm_pred)) +
-  geom_point() +
-  geom_abline(color = "blue")
+ggplot(false_koi_test, aes(x = false_koi_period_cat, fill = glm_period_cat)) +
+  geom_bar() +
+  labs(x = "Actual results",
+       fill = "Prediction")
 
-# Gradient boosting machine plot
+# Gradient boosting machine plots
 ggplot(false_koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
-  geom_line(data = false_koi_test, aes(x = gbm_pred, color = "red"))
+  geom_line(data = false_koi_test, aes(x = gbm_pred), color = "indianred2") +
+  labs(x = "Orbital period (days)",
+       y = "Stellar surface gravity",
+       title = "False positive KOIs (Gradient boosting machine)")
 ggplot(false_koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_point() +
   geom_abline(color = "blue")
 summary(false_koi_gbm)
+
+
+# Comparing model accuracy between lm and gbm
+false_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
+false_model_accuracy <- false_model_accuracy[-1,]
+false_model_accuracy <- rbind(false_model_accuracy, data.frame(model_type = "lm", rmse = false_lm_rmse, mae = false_lm_mae))
+false_model_accuracy <- rbind(false_model_accuracy, data.frame(model_type = "gbm", rmse = false_gbm_rmse, mae = false_gbm_mae))
+false_model_accuracy
+ggplot(data = false_model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.55,
+           y = 134) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.55,
+           y = 130) +
+  labs(x = "Model type",
+       y = "Score",
+       title = "False Positive KOIs")
+
 
 
