@@ -62,7 +62,7 @@ ggplot(data = koi_2disp, aes(x = koi_disposition, fill = koi_disposition == pred
   geom_bar()
 
 ```
-This plot shows the results of the analysis, comparing the true disposition with the predicted disposition (meaning the amount of exoplanets that were confirmed in comparison to false positives). There were approximately 750 confirmed exoplanets, but more than half were seen as false. There were approximately 1300 false positive exoplanet, and less than half were seen as false.
+This plot shows the results of the analysis, comparing the true disposition with the predicted disposition (meaning the amount of exoplanets that were confirmed in comparison to false positives). There were approximately 750 confirmed exoplanets, but more than half were seen as false. There were approximately 1300 false positive exoplanets, and less than half were seen as false.
 \
 
 **Discussion**
