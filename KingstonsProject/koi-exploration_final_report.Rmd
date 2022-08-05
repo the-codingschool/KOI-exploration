@@ -6,14 +6,27 @@ output: html_document
 ---
 
 ### Abstract
-The Kepler Mission is a project to identify KOI's (Kepler Objects of Interest) in the habitable zones of different stars in order to find exoplanets with the possibility of having liquid water on them.
+The Kepler Mission is a project to identify KOI's (Kepler Objects of Interest) in the habitable zones of different stars in order to find exoplanets with the possibility of having liquid water on them. When discovering a KOI, many qualities of both the KOI and the star are calculated, such as their radius, gravity, or orbital period. These are then used to determine if the KOI is really an exoplanet or not, which is why my goal in particular was to discover how the orbital period is affected by different dispositions. By being able to better differentiate between what is or isn't an exoplanet, we are not only going to have better chances of discovering extraterrestrial life, but it also opens a path to possibly even living or sustaining life on a new planet. For my research, I ran ANOVA tests to see whether or not the 3 dispositions were significantly different from each other, and I compared their mean orbital periods as well. I also created several linear, logistic, and gradient boosting models to predict the orbital period by using two attributes that I thought would be correlated to the orbital period, those being the planetary radius and stellar surface gravity. From my ANOVA tests, I learned that the 3 dispositions were all significantly different from each other and that their mean orbital periods had large differences. The models also show that, while none of them were particularly accurate, the CONFIRMED KOIs performed the best and were more easily able to be predicted, showing that the data is more linear and contains fewer outliers compared to the other dispositions. This shows that the dispositions have a clear difference in their values, and by creating better models, we will be able understand how the orbital period, disposition, and other variables all correlate to one another.
+
 
 
 ### Background
-Background goes here
+The KOI dataset comes from the data collected during the Kepler Mission.  The Kepler Mission is a project to identify KOI's (Kepler Objects of Interest) in the habitable zones of different stars in order to find exoplanets with the possibility of having liquid water on them. It contains information such as:
+
+* Classification (Kepler ID, name)
+* Disposition (CANDIDATE, FALSE POSITIVE, or CONFIRMED exoplanet)
+* Planetary and stellar details (radius, temperature, orbital period, etc.)
 
 
 ### Research Question
+How might the orbital periods of planets be affected differently by the planetary radius and stellar surface gravity depending on its disposition?
+
+### Hypotheses
+Null: The average orbital periods of planets will remain the same between different dispositions.
+
+Alternate hypothesis: The average orbital periods of planets will differ between different dispositions.
+
+
 
 ```{r setup, include=FALSE}
 library(dplyr)
@@ -26,6 +39,10 @@ koi_test <- readRDS("KingstonsProject/data/koi_test.RDS")
 model_accuracy <- readRDS("KingstonsProject/data/model_accuracy.RDS")
 confirmed_koi_test <- readRDS("KingstonsProject/data/confirmed_koi_test.RDS")
 confirmed_model_accuracy <- readRDS("KingstonsProject/data/confirmed_model_accuracy.RDS")
+candidate_koi_test <- readRDS("KingstonsProject/data/candidate_koi_test.RDS")
+candidate_model_accuracy <- readRDS("KingstonsProject/data/candidate_model_accuracy.RDS")
+false_koi_test <- readRDS("KingstonsProject/data/false_koi_test.RDS")
+false_model_accuracy <- readRDS("KingstonsProject/data/false_model_accuracy.RDS")
 ```
 
 #### Figure 1: Average Orbital Periods
@@ -90,7 +107,7 @@ Like Figure 1, this plot displays the average orbital period for the three diffe
 
 
 
-#### Figure 3 and Figure 4: Predicting Orbital Period Using All Dispositions and Linear Regression
+#### Figure 3a and Figure 3b: Predicting Orbital Period Using All Dispositions and Linear Regression
 ```{r, echo = FALSE}
 ggplot(koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
@@ -107,11 +124,11 @@ ggplot(koi_test, aes(x = koi_period, y = lm_pred)) +
        title = "Actual Orbital Period Compared to Predicted Orbital Period")
 ```
 
-These linear model plots use the stellar surface gravity and planetary radius columns in order to predict the orbital period. Stellar surface gravity was chosen for the y-axis in Figure 3, as that column had a lower p-value compared to planetary radius. In Figure 3, the red line represents the predicted values, while in Figure 4, the blue line represents the y = x line. Generally, in Figure 3, the predictions are quite off, only partially following the general shape of the figure. However, the line does seem to hit on a few specific points, which might be a sign that stellar surface gravity and planetary radius do have some sort of trend. Figure 4 also shows that the model does not seem to do all that well, The majority of predicted values seem to be around 90, with most actual values either being lower and around 0, or much higher.
+These linear model plots use the stellar surface gravity and planetary radius columns in order to predict the orbital period. Stellar surface gravity was chosen for the y-axis in Figure 3a, as that column had a lower p-value compared to planetary radius. In Figure 3a, the red line represents the predicted values, while in Figure 3b, the blue line represents the y = x line, where any accurate predictions will lie on or near. Generally, in Figure 3a, the predictions are quite off, only partially following the general shape of the figure. However, the line does seem to hit on a few specific points, which might be a sign that stellar surface gravity and planetary radius do have some sort of trend. Figure 3b also shows that the model does not seem to do all that well, as the majority of predicted values seem to be around 90, while most actual values have a lot more variety, either being lower and around 0, or much higher. However, some of the points higher up on the plot, while not exactly accurate, still end up being somewhat close to the y = x line, which is surprising considering their actual orbital period is not all that different from most other points. This most likely means the stellar surface gravity and/or planetary radius of these points differ from most other points.
 
 
 
-#### Figure 5: Predicting Above Average and Below Average Orbital Period Using Logistic Regression
+#### Figure 4: Predicting Above Average and Below Average Orbital Period Using Logistic Regression
 ```{r,  echo = FALSE}
 ggplot(koi_test, aes(x = koi_period_cat, fill = glm_period_cat)) +
   geom_bar() +
@@ -119,24 +136,18 @@ ggplot(koi_test, aes(x = koi_period_cat, fill = glm_period_cat)) +
        fill = "Prediction")
 ```
 
-This plot shows how many values are actually above and below the average orbital period, while the colors show the prediction using logistic regression. The stellar surface gravity, planetary radius, and disposition columns were used for the prediction. Although the model seems to have a very high accuracy, almost all values were predicted to be below average, including the vast majority of above average values. As shown on the graph, most actual values were also below average, which may be due to extremely high outliers that increase the mean orbital period.
+This plot shows how many values are actually above and below the average orbital period, while the colors show the prediction using logistic regression. The stellar surface gravity, planetary radius, and disposition columns were used for the prediction. Although the model seems to have a very high accuracy, almost all values were predicted to be below average, including the vast majority of above average values. As shown on the graph, most actual values were also below average, which may be due to extremely high outliers that increase the mean orbital period. This can be seen by the fact that the mean is about 74.3, while the median is about 9.3.
 
 
 
-#### Figure 6-1, 6-2, and Figure 7: Predicting Orbital Period Using All Dispositions and Gradient Boosting Machine
+#### Figure 5a, 5b: Predicting Orbital Period Using All Dispositions and Gradient Boosting Machine
 ```{r, echo = FALSE, warning = FALSE}
 ggplot(koi_test, aes(x = koi_period, y = koi_prad))+
   geom_point() +
   geom_line(data = koi_test, aes(x = gbm_pred), color = "indianred2") +
   labs(x = "Orbital period (days)",
        y= "Planetary Radius (Earth radii)",
-       title = "Predictions of Orbital Period by Planetary Radius")
-ggplot(koi_test, aes(x = koi_period, y = koi_prad))+
-  geom_point() +
-  geom_line(data = koi_test, aes(x = gbm_pred), color = "indianred2") +
-  labs(x = "Orbital period (days)",
-       y= "Planetary Radius (Earth radii)",
-       title = "Predictions of Orbital Period by Planetary Radius (Zoomed in)") +
+       title = "Predictions of Orbital Period by Planetary Radius") +
   ylim(0,2500) +
   xlim(-100,750)
 ggplot(koi_test, aes(x = koi_period, y = gbm_pred)) +
@@ -147,11 +158,11 @@ ggplot(koi_test, aes(x = koi_period, y = gbm_pred)) +
        title = "Actual Orbital Period Compared to Predicted Orbital Period")
 ```
 
-These 3 plots all use the predicted values from using a Gradient Boosting Machine. The stellar surface gravity and planetary radius were used for the prediction, and planetary radius was used as the y-axis for Figure 6 as it had a higher relative influence compared to stellar surface gravity. Overall, it seems like the model performed much better than the linear model, as aside from the negative values, many predicted values seemed to line up with points, and even some of the big spikes in the predicted values were close to actual values. Figure 7 shows that there are clearly still many  values that the model was not able to accurately predict, however there does appear to be a greater concentration of values nearby the y = x line when compared to the linear model.
+These plots both use the predicted values from using a gradient boosting machine. The stellar surface gravity and planetary radius were used for the prediction, and planetary radius was used as the y-axis for Figure 5a as it had a higher relative influence compared to stellar surface gravity. Overall, it seems like the model performed much better than the linear model, as aside from the negative values, many predicted values seemed to line up with points, and even some of the big spikes in the predicted values were close to actual values. Figure 5b more clearly shows that there are still many values that the model was not able to accurately predict, however there does appear to be a greater concentration of values nearby the y = x line when compared to the linear model.
 
 
 
-#### Figure 8: Comparing Model Accuracy Between Linear Model and Gradient Boosting Machine
+#### Figure 6: Comparing Model Accuracy Between Linear Model and Gradient Boosting Machine
 ```{r, echo = FALSE}
 ggplot(data = model_accuracy, aes(x = model_type)) +
   geom_point(aes(y = rmse), color = "red", size = 5) +
@@ -171,11 +182,11 @@ ggplot(data = model_accuracy, aes(x = model_type)) +
        title = "RMSE and MAE Scores for Gradient Boosting Machine and Linear Model")
 ```
 
-This plot compares the Root Mean Squared Error (RMSE) and Mean Absolute Error (MAE) values between the Gradient Boosting Machine (GBM) and Linear Model (LM). The two columns represent the model type, being GBM or LM, while the colored dots show what the score was and what type of error is being shown. The lower the error, the more accurate the plot was. Both RMSE and MAE scores were lower on the GBM column, meaning that the GBM model was more accurate and had less error than the LM model, proving the earlier conclusion that the GBM model was more accurate.
+This plot compares the root mean square error (RMSE) and mean absolute error (MAE) values between the gradient boosting machine (GBM) and linear model (LM). The two columns represent the model type, being GBM or LM, while the colored dots show what the score was and what type of error is being shown. The lower the error, the more accurate the plot was. Both RMSE and MAE scores were lower on the GBM column, meaning that the GBM model was more accurate and had less error than the LM model, proving the earlier conclusion that the GBM model was more accurate.
 
 
 
-#### Figure 9 and Figure 10: Predicting Orbital Period Using CONFIRMED KOIs and Linear Regression
+#### Figure 7a and Figure 7b: Predicting Orbital Period Using CONFIRMED KOIs and Linear Regression
 ```{r, echo = FALSE}
 ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
@@ -191,14 +202,125 @@ ggplot(confirmed_koi_test, aes(x = koi_period, y = lm_pred)) +
        title = "Actual Orbital Period Compared to Predicted Orbital Period")
 ```
 
-This plot shows a prediction of the orbital period using only the stellar surface gravity and planetary radius values from rows with a KOI disposition of "CONFIRMED". Compared to Figure 3, the predictions in Figure 9 appear much more linear, and while the line does seem to group together a bit more  where the cluster of values are, the line is generally pretty inaccurate. This could be due to a wide spread of data and outliers influencing the predictions. Figure 10 also shows that the prediction is generally not very accurate. However, one thing to note is that the appearance of the two figures are extremely similar, something that is not apparent at all when using stellar surface gravity as the y-axis at all. This is most likely because the p-value of planetary radius is drastically lower than that of the stellar surface gravity.
+These plots show a prediction of the orbital period using only the stellar surface gravity and planetary radius values from rows with a KOI disposition of "CONFIRMED". Compared to Figure 3a, the predictions in Figure 7a appear much more linear, and while the line does seem to group together a bit more where the cluster of values are, the line is generally pretty inaccurate. This could be due to a wide spread of data and outliers influencing the predictions. Figure 7b also shows that the prediction is generally not very accurate. However, one thing to note is that the appearance of the two figures are extremely similar, something that is not apparent at all when using stellar surface gravity as the y-axis at all. This is most likely because the p-value of planetary radius is drastically lower than that of the stellar surface gravity, meaning that the planetary radius had a higher influence on the model's predictions.
 
 
 
-#### Figure 11: Predicting Above Average and Below Average Orbital Period of CONFIRMED KOIs Using Logistic Regression
+#### Figure 8: Predicting Above Average and Below Average Orbital Period of CONFIRMED KOIs Using Logistic Regression
 ```{r, echo = FALSE}
 ggplot(confirmed_koi_test, aes(x = confirmed_koi_period_cat, fill = glm_period_cat)) +
   geom_bar() +
   labs(x = "Actual Results",
        fill = "Prediction")
 ```
+
+This logistic regression plot shows how many values are above and below the average orbital period of CONFIRMED KOIs. Using just the stellar surface gravity and planetary radius columns, the model predicted if values were below or above average, which is represented by the colors. Similar to the logistic regression plot in Figure 4, the majority of actual values were below average, and the vast majority of predicted values were one category. Although technically the model has a lower accuracy, the logistic model did sort a slightly higher amount of values into the alternate category, which means that filtering into only CONFIRMED KOIs did somewhat improve the model.
+
+
+
+#### Figure 9: Predicting Orbital Period Using CONFIRMED KOIs and Gradient Boosting Machine
+```{r, echo = FALSE}
+ggplot(confirmed_koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "Actual Orbital Period Compared to Predicted Orbital Period")
+```
+
+This gradient boosting machine plot uses the the stellar surface gravity and planetary radius columns for the prediction. It seems like the model performed somewhat better than the linear model, as it seems like a bigger quantity of values were near the y = x line, but there were quite a few predictions that were much lower than the actual orbital periods. Also, similar to the plots when using all dispositions, the majority of actual values are clustered towards the lower end.
+
+
+
+#### Figure 10: Comparing CONFIRMED KOIs Model Accuracy Between Linear Model and Gradient Boosting Machine
+```{r, echo = FALSE}
+ggplot(data = confirmed_model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.6,
+           y = 50) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.6,
+           y = 47) +
+  labs(x = "Model Type",
+       y = "Score",
+       title = "RMSE and MAE Scores for Gradient Boosting Machine and Linear Model")
+```
+
+This plot compares the RMSE and MAE values between GBM and LM. The two columns represent the model type, while the colored dots show the score and type of error. Again, both RMSE and MAE scores were lower on the GBM column, meaning that the GBM model was more accurate and had less error than the LM model. Additionally, the difference in error between models was less than when using all KOIs, showing that the models were more accurately able to predict the orbital period when using just CONFIRMED KOIs.
+
+
+
+#### Figure 11: Predicting Orbital Period Using FALSE POSITIVE KOIs and Linear Regression
+```{r, echo = FALSE, warning = FALSE}
+ggplot(false_koi_test, aes(x = koi_period, y = lm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "Actual Orbital Period Compared to Predicted Orbital Period") +
+  ylim(52,68)
+```
+
+This linear model plot shows the predictions of orbital period by using the stellar surface gravity and planetary radius values only from rows with a KOI disposition of "FALSE POSITIVE". Overall, this model peformed quite poorly. Like the other plots, the actual values had a large cluster of values around 0. However, the model was not able to accurately identify these values, as its lowest predicted value was around 53, and the majority of predicted values seem to be around 60. The actual values also had a big spread of values, which for the most part, the model was unable to see a difference between. A reason for these inaccurate predictions could be due to a highly fluctuating orbital period, but a static planetary radius and/or stellar surface gravity.
+
+
+
+#### Figure 12: Predicting Above Average and Below Average Orbital Period of FALSE POSITIVE KOIs Using Logistic Regression
+```{r, echo = FALSE}
+ggplot(false_koi_test, aes(x = false_koi_period_cat, fill = glm_period_cat)) +
+  geom_bar() +
+  labs(x = "Actual Results",
+       fill = "Prediction")
+```
+
+This logistic regression plot shows how many values are above and below the average orbital period of FALSE POSITIVE KOIs, while the color shows the model's predictions, formed by using the planetary radius and stellar surface gravity columns. Similar to Figure 4, the model again seemed to perform quite well with a high accuracy, but the model simply assigned practically all values to a single category. However, in this, case, the model only predicted one value to be the other category, showing that the orbital period either had an extreme outlier(s) that dragged the average much higher, or the columns used for the prediction varied extremely little.
+
+
+
+#### Figure 13: Predicting Orbital Period Using FALSE POSITIVE KOIs and Gradient Boosting Machine
+```{r, echo = FALSE}
+ggplot(false_koi_test, aes(x = koi_period, y = gbm_pred)) +
+  geom_point() +
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "Actual Orbital Period Compared to Predicted Orbital Period")
+```
+
+This gradient boosting model used the planetary radius and stellar surface gravity columns to predict the orbital period. This model looks like it has performed quite a bit better than the linear model. Again, there are still a large amount of actual orbital period values around 0, some of which the model got pretty close, but others the model predicted to be much larger than they actually were. The model was also not able to accurately predict most of the data that was more spread out.
+
+
+
+#### Figure 14: Comparing FALSE POSITIVE KOIs Model Accuracy Between Linear Model and Gradient Boosting Machine
+```{r, echo = FALSE}
+ggplot(data = false_model_accuracy, aes(x = model_type)) +
+  geom_point(aes(y = rmse), color = "red", size = 5) +
+  geom_point(aes(y = mae), color = "blue", size = 5) +
+  annotate("text", label = "RMSE",
+           color = "red",
+           size = 7,
+           x = 0.6,
+           y = 132) +
+  annotate("text", label = "MAE",
+           color = "blue",
+           size = 7,
+           x = 0.6,
+           y = 126) +
+  labs(x = "Model Type",
+       y = "Score",
+       title = "RMSE and MAE Scores for Gradient Boosting Machine and Linear Model")
+```
+
+This plot compares the RMSE and MAE values between the GBM and LM models. The two columns show the two model types, while the colored dots show what type of error it is and what the score was. Again, the GBM model had a lower error than the LM model for both the RMSE and MAE scores. This shows that the GBM model's predictions were more accurate, as had less error than the LM model. The RMSE and MAE scores were also pretty similar to the RMSE and MAE scores of the predictions when using all KOIs, which shows that the FALSE POSITIVE KOIs possibly had a large impact on the all KOIS model. Another reason could be that the FALSE POSITIVE KOIs had a large spread of data that was harder to predict, similar to the all KOIs variables. 
+
+
+
+
+### Discussion
+Overall, the different dispositions differed quite a lot in orbital period. The ANOVA model/barplot shows that the mean orbital period varied quite highly between the CANDIDATE, CONFIRMED, and FALSE POSITIVE dispositions, and that there was a significant difference between all 3 of them. The many models and predictions also show that the orbital period
