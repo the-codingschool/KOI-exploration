@@ -24,7 +24,7 @@ POTENTIAL RESEARCH QUESTIONS:
 
 
 
-(Probably) FINAL RESEARCH QUESTION:
+FINAL RESEARCH QUESTION:
 How might the orbital periods of planets be affected differently by the planetary radius and stellar surface gravity depending on its disposition?
 
 Null hypothesis: The average orbital periods of planets will stay the same between different dispositions.
