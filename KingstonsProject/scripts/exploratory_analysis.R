@@ -6,7 +6,11 @@ library(ggplot2)
 koi_data <- read.csv("data/cumulative_koi_data.csv")
 View(koi_data)
 
-
+koi_test <- readRDS("KingstonsProject/data/koi_test.RDS")
+model_accuracy <- readRDS("KingstonsProject/data/model_accuracy.RDS")
+confirmed_koi_test <- readRDS("KingstonsProject/data/confirmed_koi_test.RDS")
+confirmed_model_accuracy <- readRDS("KingstonsProject/data/confirmed_model_accuracy.RDS")
+candidate_koi_test <- readRDS("KingstonsProject/data/candidate_koi_test.RDS")
 
 # Tried to sort by date but name doesn't actually correspond to date discovered
 #name_koi_data <- arrange(koi_data, desc(kepoi_name))
@@ -370,7 +374,13 @@ ggplot(koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_abline(color = "blue") +
   labs(x = "Actual Orbital Period",
        y= "Predicted Values",
-       title = "All KOIs: Actual Orbital Period Compared to Predicted Orbital Period")
+       title = "All KOIs: Actual Orbital Period Compared to Predicted Orbital Period") +
+  xlim(0, 750) +
+  annotate("text", label = "RMSE: 117.8296",
+           color = "blue",
+           size = 7,
+           x = 650,
+           y = 210)
 summary(koi_gbm)
 
 
@@ -533,7 +543,15 @@ ggplot(confirmed_koi_test, aes(x = koi_period, y = koi_prad)) +
        y = "Planetary Radius (Earth radii)")
 ggplot(confirmed_koi_test, aes(x = koi_period, y = gbm_pred)) +
   geom_point() +
-  geom_abline(color = "blue")
+  geom_abline(color = "blue") +
+  labs(x = "Actual Orbital Period",
+       y= "Predicted Values",
+       title = "CONFIRMED KOIs: Actual Orbital Period Compared to Predicted Orbital Period") +
+  annotate("text", label = "RMSE: 44.2419",
+           color = "blue",
+           size = 7,
+           x = 460,
+           y = 130)
 summary(confirmed_koi_gbm)
 
 
@@ -668,6 +686,10 @@ candidate_accuracy <- candidate_true_vals/candidate_total_vals
 candidate_accuracy
 
 
+## Saving dataset as RDS file
+saveRDS(candidate_koi_test, "KingstonsProject/data/candidate_koi_test.RDS")
+
+
 # Linear model plots
 ggplot(candidate_koi_test, aes(x = koi_period, y = koi_slogg)) +
   geom_point() +
@@ -697,7 +719,7 @@ summary(candidate_koi_gbm)
 
 # Comparing model accuracy between lm and gbm
 candidate_model_accuracy <- data.frame(model_type = "", rmse = "", mae = "")
-# candidate_model_accuracy <- candidate_model_accuracy[-1,]
+candidate_model_accuracy <- candidate_model_accuracy[-1,]
 candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "lm", rmse = candidate_lm_rmse, mae = candidate_lm_mae))
 candidate_model_accuracy <- rbind(candidate_model_accuracy, data.frame(model_type = "gbm", rmse = candidate_gbm_rmse, mae = candidate_gbm_mae))
 candidate_model_accuracy
@@ -826,6 +848,10 @@ false_accuracy <- false_true_vals/false_total_vals
 false_accuracy
 
 
+## Saving dataset as RDS file
+saveRDS(false_koi_test, "KingstonsProject/data/false_koi_test.RDS")
+
+
 # Linear model plots
 ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
@@ -841,7 +867,7 @@ ggplot(false_koi_test, aes(x = false_koi_period_cat, fill = glm_period_cat)) +
        fill = "Prediction")
 
 # Gradient boosting machine plots
-ggplot(false_koi_test, aes(x = koi_period, y = koi_slogg)) +
+ggplot(false_koi_test, aes(x = koi_period, y = koi_prad)) +
   geom_point() +
   geom_line(data = false_koi_test, aes(x = gbm_pred), color = "indianred2") +
   labs(x = "Orbital period (days)",
