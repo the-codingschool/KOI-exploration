@@ -6,6 +6,7 @@ library(ggplot2)
 
 # Load dataset
 koi_data <- read.csv("data/cumulative_koi_data.csv")
+saveRDS(koi_data, "KingstonsProject/data/koi_data.RDS")
 View(koi_data)
 
 
