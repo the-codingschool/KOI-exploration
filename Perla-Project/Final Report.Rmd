@@ -48,7 +48,7 @@ ggplot(data = koi_data2, aes(x = koi_disposition, fill = koi_disposition, fig.al
   geom_bar()
 
 ```
-This plot shows the Kepler exoplanets that have been candidates, confirmed, or false positives. There is a significantly higher rate of false positive exoplanets than candidates and confirmed exoplanets. 
+This plot shows the Kepler exoplanets that have been candidates, confirmed, or false positives. There is a significantly higher number of false positive exoplanets than candidates and confirmed exoplanets. 
 
 \newpage
 
